@@ -1,0 +1,45 @@
+<launch>
+    <!-- Arguments -->
+    <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+    <arg name="multi_robot_name" default=""/>
+    <arg name="slam_methods" default="gmapping"
+         doc="slam type [gmapping, cartographer, hector, karto, frontier_exploration]"/>
+    <arg name="configuration_basename" default="turtlebot3_lds_2d.lua"/>
+    <arg name="open_rviz" default="true"/>
+
+    <!-- TurtleBot3 -->
+    <arg name="urdf_file"
+         default="$(find xacro)/xacro --inorder '$(find turtlebot3_description_reduced_mesh)/urdf/turtlebot3_$(arg model).urdf.xacro'"/>
+    <param name="robot_description" command="$(arg urdf_file)"/>
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+        <param name="publish_frequency" type="double" value="50.0"/>
+        <param name="tf_prefix" value="$(arg multi_robot_name)"/>
+    </node>
+
+    <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(find fira_maze)/worlds/maze_2.world"/>
+        <arg name="gui" value="false"/>
+        <!-- more default parameters can be changed here -->
+    </include>
+
+    <!-- Spawn a robot into Gazebo -->
+    <node name="spawn_gazebo_model" pkg="gazebo_ros" type="spawn_model"
+          args="-urdf -param   robot_description -model   robot -x   0 -y   0.5 -z   0" respawn="false" output="screen"/>
+
+    <node name="joy" pkg="rqt_virtual_joy" type="rqt_virtual_joy" output="screen"/>
+    <node pkg="translator" name="translator" type="translator.py"/>
+    <node pkg="fira_maze" name="explorer" type="maze_explorer.py"/>
+
+    <!-- SLAM: Gmapping, Cartographer, Hector, Karto, Frontier_exploration, RTAB-Map -->
+    <include file="$(find turtlebot3_slam)/launch/turtlebot3_$(arg slam_methods).launch">
+        <arg name="model" value="$(arg model)"/>
+        <arg name="configuration_basename" value="$(arg configuration_basename)"/>
+    </include>
+
+    <!-- rviz -->
+    <group if="$(arg open_rviz)">
+        <node pkg="rviz" type="rviz" name="rviz" required="true"
+              args="-d $(find turtlebot3_slam)/rviz/turtlebot3_$(arg slam_methods).rviz"/>
+    </group>
+</launch>
