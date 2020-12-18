@@ -1,0 +1,20 @@
+<launch>
+  <!--  Arguments  -->
+  <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+  <arg name="multi_robot_name" default=""/>
+
+  <arg name="tb3_x_pos"/>
+  <arg name="tb3_y_pos"/>
+  <arg name="tb3_z_pos"/>
+  <arg name="tb3_yaw"/>
+  
+  <include file="$(find turtlebot3_bringup)/launch/turtlebot3_remote.launch">
+    <arg name="model" value="$(arg model)" />
+    <arg name="multi_robot_name" value="$(arg multi_robot_name)"/>
+  </include>
+
+<!--  Spawn  a robot-->
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg multi_robot_name) -x $(arg tb3_x_pos) -y $(arg tb3_y_pos) -z $(arg tb3_z_pos) -Y $(arg tb3_yaw) -param robot_description" />
+  <!--node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(find turtlebot3_description)/rviz/model.rviz"/-->
+  
+</launch>
