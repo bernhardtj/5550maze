@@ -25,21 +25,41 @@ cd "$WS/src" && git clone https://github.com/arixrobotics/fira_maze
 # Package: reduced mesh robots for faster simulation (from the instructions)
 cd "$WS/src" && git clone https://github.com/aws-robotics/turtlebot3-description-reduced-mesh
 
-# Package: translator for virtual joystick
-cd "$WS/src" && catkin_create_pkg translator rospy
-source "$WS/devel/setup.bash" && roscd translator
-install -Dvm755 "$SRCDIR/translator.py" scripts/translator.py
-cat <<'EOF' >>CMakeLists.txt
-catkin_install_python(PROGRAMS scripts/translator.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-EOF
+# Package: frontier explorer
+cd "$WS/src" && git clone https://github.com/hrnr/m-explore
 
-# Package: general stuff (main)
+# Package: obstacle detector
+cd "$WS/src" && git clone https://github.com/tysik/obstacle_detector
+
+# Package: user code (main)
 cd "$WS/src" && catkin_create_pkg main rospy
 source "$WS/devel/setup.bash" && roscd main
-install -Dvm755 "$SRCDIR/slam.xml" launch/slam.launch
+for script in $SRCDIR/scripts/*.py; do
+    install -Dvm755 "$script" "scripts/$(basename $script)"
+done
+for launch in $SRCDIR/launch/*.launch.xml; do
+    install -Dvm755 "$launch" "launch/$(basename ${launch%.*})"
+done
+for config in $SRCDIR/config/*; do
+    install -Dvm755 "$launch" "config/$(basename ${config%.*})"
+done
+cat <<EOF >>CMakeLists.txt
+catkin_install_python(PROGRAMS $(find scripts -name "*.py" -exec printf "{} " \;)
+  DESTINATION \${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+EOF
 
 # Build project
 cd "$WS" && catkin_make
 
+# ----- TASK 1 ----- #
+# export TURTLEBOT3_MODEL=burger
+# source "$WS/devel/setup.bash" && roslaunch main slam.launch
+
+# ----- TASK 2 ----- #
+# export TURTLEBOT3_MODEL=burger
+# source "$WS/devel/setup.bash" && roslaunch main goal_listener.launch
+
+# ----- TASK 3 ----- #
+# export TURTLEBOT3_MODEL=burger
+# source "$WS/devel/setup.bash" && roslaunch main robots.launch

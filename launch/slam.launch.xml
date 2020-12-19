@@ -11,10 +11,7 @@
     <arg name="urdf_file"
          default="$(find xacro)/xacro --inorder '$(find turtlebot3_description_reduced_mesh)/urdf/turtlebot3_$(arg model).urdf.xacro'"/>
     <param name="robot_description" command="$(arg urdf_file)"/>
-    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
-        <param name="publish_frequency" type="double" value="50.0"/>
-        <param name="tf_prefix" value="$(arg multi_robot_name)"/>
-    </node>
+    
 
     <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -28,8 +25,28 @@
           args="-urdf -param   robot_description -model   robot -x   0 -y   0.5 -z   0" respawn="false" output="screen"/>
 
     <node name="joy" pkg="rqt_virtual_joy" type="rqt_virtual_joy" output="screen"/>
-    <node pkg="translator" name="translator" type="translator.py"/>
-    <node pkg="fira_maze" name="explorer" type="maze_explorer.py"/>
+    <node pkg="main" name="translator" type="translator.py"/>
+
+    <!-- Explorer -->
+    <node pkg="explore_lite" type="explore" respawn="false" name="explore" output="screen">
+    <param name="robot_base_frame" value="base_link"/>
+    <param name="costmap_topic" value="map"/>
+    <param name="costmap_updates_topic" value="map_updates"/>
+    <param name="visualize" value="true"/>
+    <param name="planner_frequency" value="1.0"/>
+    <param name="progress_timeout" value="15.0"/>
+    <param name="potential_scale" value="0.003"/>
+    <param name="orientation_scale" value="0.0"/>
+    <param name="gain_scale" value="3.0"/>
+    <param name="transform_tolerance" value="0.3"/>
+    <param name="min_frontier_size" value="0.15"/>
+    <param name="track_unknown_space" value="true"/>
+    </node>
+
+    <!-- Move Base -->
+    <include file="$(find fira_maze)/launch/turtlebot3_movebase.launch">
+    <param name="selective_resampling" value="true"/>
+    </include>
 
     <!-- SLAM: Gmapping, Cartographer, Hector, Karto, Frontier_exploration, RTAB-Map -->
     <include file="$(find turtlebot3_slam)/launch/turtlebot3_$(arg slam_methods).launch">
