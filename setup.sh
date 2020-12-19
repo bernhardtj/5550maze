@@ -41,7 +41,7 @@ for launch in $SRCDIR/launch/*.launch.xml; do
     install -Dvm755 "$launch" "launch/$(basename ${launch%.*})"
 done
 for config in $SRCDIR/config/*; do
-    install -Dvm755 "$launch" "config/$(basename ${config%.*})"
+    install -Dvm755 "$launch" "config/$(basename $config)"
 done
 cat <<EOF >>CMakeLists.txt
 catkin_install_python(PROGRAMS $(find scripts -name "*.py" -exec printf "{} " \;)
